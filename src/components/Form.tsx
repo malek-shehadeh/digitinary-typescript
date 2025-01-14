@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Input, Checkbox } from "digitinary-ui";
 import { User, Mail, Lock, Phone, Calendar, Globe } from "lucide-react";
 
@@ -44,66 +44,71 @@ const Form: React.FC = () => {
     { label: "Germany", value: "germany" },
   ];
 
-  const validateField: ValidateFieldType = useMemo(
-    () => ({
-      fullName: (value: string): string => {
-        if (!value) return "Full name is required";
-        if (value.length < 3) return "Full name must be at least 3 characters";
-        return "";
-      },
-      email: (value: string): string => {
-        if (!value) return "Email is required";
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value))
-          return "Please enter a valid email address";
-        if (!value.endsWith(".com") && !value.endsWith(".net")) {
-          return "Email must end with .com or .net";
-        }
-        return "";
-      },
-      password: (value: string): string => {
-        if (!value) return "Password is required";
-        if (value.length < 8) return "Password must be at least 8 characters";
-        if (!/\d/.test(value))
-          return "Password must include at least one number";
-        if (!/[!@#$%^&*]/.test(value))
-          return "Password must include at least one special character";
-        return "";
-      },
-      phone: (value: string): string => {
-        if (!value) return "Phone number is required";
-        if (!/^\d+$/.test(value)) return "Please enter numbers only";
-        if (value.length !== 10)
-          return "Please enter a valid 10-digit phone number";
-        return "";
-      },
-      age: (value: string): string => {
-        if (!value) return "Age is required";
-        const age = parseInt(value);
-        if (isNaN(age) || age < 18 || age > 65)
-          return "Age must be between 18 and 65";
-        return "";
-      },
-      country: (value: string): string => {
-        if (!value) return "Please select a country";
-        return "";
-      },
-      agreeToTerms: (value: boolean): string => {
-        if (!value) return "You must agree to the terms";
-        return "";
-      },
-    }),
-    []
-  );
+  const validateField: ValidateFieldType = {
+    fullName: (value: string): string => {
+      if (!value) return "Full name is required";
+      if (value.length < 3) return "Full name must be at least 3 characters";
+      return "";
+    },
+    email: (value: string): string => {
+      if (!value) return "Email is required";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) return "Please enter a valid email address";
+      if (!value.endsWith(".com") && !value.endsWith(".net")) {
+        return "Email must end with .com or .net";
+      }
+      return "";
+    },
+    password: (value: string): string => {
+      if (!value) return "Password is required";
+      if (value.length < 8) return "Password must be at least 8 characters";
+      if (!/\d/.test(value)) return "Password must include at least one number";
+      if (!/[!@#$%^&*]/.test(value))
+        return "Password must include at least one special character";
+      return "";
+    },
+    phone: (value: string): string => {
+      if (!value) return "Phone number is required";
+      if (!/^\d+$/.test(value)) return "Please enter numbers only";
+      if (value.length !== 10)
+        return "Please enter a valid 10-digit phone number";
+      return "";
+    },
+    age: (value: string): string => {
+      if (!value) return "Age is required";
+      const age = parseInt(value);
+      if (isNaN(age) || age < 18 || age > 65)
+        return "Age must be between 18 and 65";
+      return "";
+    },
+    country: (value: string): string => {
+      if (!value) return "Please select a country";
+      return "";
+    },
+    agreeToTerms: (value: boolean): string => {
+      if (!value) return "You must agree to the terms";
+      return "";
+    },
+  };
 
   const handleInputChange = <T extends keyof FormData>(
-    value: FormData[T],
+    value: string | number | boolean,
     fieldName: T
   ) => {
-    let processedValue: FormData[T] = value;
+    let processedValue: FormData[T];
 
-    if (fieldName === "phone" && typeof value === "string") {
-      processedValue = value.replace(/\D/g, "") as FormData[T];
+    // Convert number to string if necessary
+    if (typeof value === "number") {
+      processedValue = value.toString() as FormData[T];
+    } else if (typeof value === "boolean") {
+      processedValue = value as FormData[T];
+    } else {
+      processedValue = value as FormData[T];
+    }
+
+    // Special handling for phone field
+    if (fieldName === "phone" && typeof processedValue === "string") {
+      processedValue = processedValue.replace(/\D/g, "") as FormData[T];
     }
 
     setFormData((prev) => ({
@@ -153,7 +158,8 @@ const Form: React.FC = () => {
     if (countryError) valid = false;
 
     setIsFormValid(valid);
-  }, [formData, selectedCountry, validateField]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, selectedCountry]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,8 +193,8 @@ const Form: React.FC = () => {
             Please fill in your details below
           </p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Full Name */}
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
             <Input
@@ -205,6 +211,7 @@ const Form: React.FC = () => {
             />
           </div>
 
+          {/* Email */}
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
             <Input
@@ -221,6 +228,7 @@ const Form: React.FC = () => {
             />
           </div>
 
+          {/* Password */}
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
             <Input
@@ -237,6 +245,7 @@ const Form: React.FC = () => {
             />
           </div>
 
+          {/* Phone */}
           <div className="relative">
             <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
             <Input
@@ -246,19 +255,20 @@ const Form: React.FC = () => {
               errorMsg={errors.phone}
               helperText="Enter 10 digits only"
               placeholder="Enter your phone number"
-              type="tel"
+              type="text"
               size="medium"
               clearable
               className="pl-10"
             />
           </div>
 
+          {/* Age */}
           <div className="relative">
             <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
             <Input
               label="Age"
               value={formData.age}
-              onChange={(value) => handleInputChange(value, "age")}
+              onChange={(value) => handleInputChange(value.toString(), "age")}
               errorMsg={errors.age}
               helperText="Must be between 18 and 65"
               placeholder="Enter your age"
@@ -269,6 +279,7 @@ const Form: React.FC = () => {
             />
           </div>
 
+          {/* Country */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Country
@@ -293,6 +304,7 @@ const Form: React.FC = () => {
             </div>
           </div>
 
+          {/* Terms and Conditions */}
           <div className="space-y-2">
             <Checkbox
               label="I agree to the terms and conditions"
@@ -309,6 +321,7 @@ const Form: React.FC = () => {
             )}
           </div>
 
+          {/* Submit Button */}
           <Button
             variant="outlined"
             size="medium"
