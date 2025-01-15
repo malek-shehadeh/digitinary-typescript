@@ -6,7 +6,6 @@ type CountryOption = {
   label: string;
   value: string;
 };
-
 interface FormData {
   fullName: string;
   email: string;
